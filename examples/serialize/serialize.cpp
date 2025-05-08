@@ -476,8 +476,11 @@ std::pair<std::shared_ptr<Condition>, int> createFullNestedCondition(const parse
 
 bool isGroundClassified(const Ground& g, const ConditionClassification& condClassif)
 {
-    for (unsigned int paramId : g.params)
+    for (int paramId : g.params)
     {
+        if (paramId < 0)
+            continue;
+
 	    if ( paramId >= condClassif.numActionParams ) { // non-action parameter (introduced by forall or exists)
             auto cond = condClassif.paramToCond.at(paramId).lock();
             if (std::ranges::find(condClassif.checkedConds, cond) != condClassif.checkedConds.end() ) 
@@ -494,8 +497,11 @@ void getNestedConditionsForGround(CondVec& nestedConditions, const Ground& g, co
 
     std::set< int > sortedGroundParams( g.params.begin(), g.params.end() ); // sort to respect nested order
 
-    for (unsigned int paramId : sortedGroundParams)
+    for (int paramId : sortedGroundParams)
     {
+        if (paramId < 0)
+            continue;
+
 	    if ( paramId >= condClassif.numActionParams ) { // non-action parameter (introduced by forall or exists)
             auto cond = condClassif.paramToCond.at(paramId).lock();
             if ( cond != lastNestedCondition ) {
@@ -951,28 +957,36 @@ std::shared_ptr<Instance> createTransformedInstance(Domain& cd, const Instance& 
 
 int main(int argc, char* argv[])
 {
-    ProgramParams pp(argc, argv);
+   // try
+    {
+        ProgramParams pp(argc, argv);
 
-    if (pp.help)
-        showHelp();
+        if (pp.help)
+            showHelp();
 
-    // load multiagent domain and instance
-    auto d = std::make_unique<parser::multiagent::ConcurrencyDomain>(pp.domain);
+        // load multiagent domain and instance
+        auto d = std::make_unique<parser::multiagent::ConcurrencyDomain>(pp.domain);
 
-    addAgentType(*d);
+        addAgentType(*d);
 
-    // add no-op action that will be used in the transformation
-    if (pp.agentOrder)
-        addNoopAction(*d);
+        // add no-op action that will be used in the transformation
+        if (pp.agentOrder)
+            addNoopAction(*d);
 
-    auto ins = std::make_unique<Instance>(*d, pp.ins);
+        auto ins = std::make_unique<Instance>(*d, pp.ins);
 
-    // create classical/single-agent domain
-    auto cd = createClassicalDomain(*d, pp.agentOrder, pp.maxJointActionSize);
-    std::cout << *cd;
+        // create classical/single-agent domain
+        auto cd = createClassicalDomain(*d, pp.agentOrder, pp.maxJointActionSize);
+        std::cout << *cd;
 
-    auto ci = createTransformedInstance(*cd, *ins, pp.agentOrder, pp.maxJointActionSize);
-    std::cerr << *ci;
-
+        auto ci = createTransformedInstance(*cd, *ins, pp.agentOrder, pp.maxJointActionSize);
+        std::cerr << *ci;
+    }
+    /*catch (const std::exception& e)
+    {
+        std::string sth = e.what();
+        std::cerr << "Error encountered: " << sth << std::endl << std::flush;
+        return -1;
+    }*/
     return 0;
 }

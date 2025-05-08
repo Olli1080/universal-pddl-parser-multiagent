@@ -3,6 +3,9 @@
 
 #include <multiagent/AgentAction.h>
 
+#include "ConcurrencyDomain.h"
+#include "MultiagentDomain.h"
+
 namespace parser { namespace multiagent {
 
 void AgentAction::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const pddl::Domain & d ) const
@@ -40,15 +43,28 @@ void AgentAction::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::
 {
 	TokenStruct<std::string> astruct;
 
-	f.next();
-	f.assert_token( ":AGENT" );
-	astruct.insert( f.getToken() );
-	if ( d.typed ) {
-		f.next();
-		f.assert_token( "-" );
-		astruct.types.push_back( f.getToken( d.types ) );
+	bool fact = false;
+	if (auto concurrent = dynamic_cast<ConcurrencyDomain*>(&d); concurrent)
+	{
+		fact = concurrent->fact;
 	}
-	else astruct.types.emplace_back("OBJECT" );
+	else if (auto multi = dynamic_cast<MultiagentDomain*>(&d); multi)
+	{
+		fact = multi->fact;
+	}
+
+	if (!fact)
+	{
+		f.next();
+		f.assert_token(":AGENT");
+		astruct.insert(f.getToken());
+		if (d.typed) {
+			f.next();
+			f.assert_token("-");
+			astruct.types.push_back(f.getToken(d.types));
+		}
+		else astruct.types.emplace_back("OBJECT");
+	}
 
 	f.next();
 	f.assert_token( ":PARAMETERS" );
