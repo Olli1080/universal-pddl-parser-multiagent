@@ -8,8 +8,8 @@ namespace parser { namespace multiagent {
 using pddl::TokenStruct;
 using pddl::Filereader;
 
-class ConcurrencyGround : public pddl::Ground {
-
+class ConcurrencyGround : public pddl::Ground
+{
 public:
 
 	std::map< int, std::string > constants;
@@ -20,15 +20,15 @@ public:
 	ConcurrencyGround( const std::string s, const IntVec & p = IntVec() )
 		: Ground( s, p ) {}
 
-	ConcurrencyGround( pddl::Lifted * l, const IntVec & p = IntVec() )
+	ConcurrencyGround(const std::shared_ptr<pddl::Lifted>& l, const IntVec & p = IntVec() )
 		: Ground( l, p ) {}
 
-	ConcurrencyGround( const pddl::Ground * g, pddl::Domain & d )
+	ConcurrencyGround( const pddl::Ground& g, pddl::Domain & d )
 		: Ground( g, d ) {}
 
-	void parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d );
+	void parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d) override;
 
-	void setLifted( pddl::Lifted * l, pddl::Domain & d );
+	void setLifted(const std::shared_ptr<pddl::Lifted>& l, pddl::Domain & d );
 };
 
 } } // namespaces

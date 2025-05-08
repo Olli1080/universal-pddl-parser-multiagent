@@ -4,13 +4,15 @@
 
 namespace parser { namespace multiagent {
 
-void ConcurrencyGround::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d ) {
+void ConcurrencyGround::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d )
+{
 	f.next();
 
 	std::string lastToken = f.getToken();
-	while ( lastToken != "" ) {
+	while (!lastToken.empty()) 
+	{
 		int k = ts.index( lastToken );
-		if ( k >= 0 ) params.push_back( k );
+		if ( k >= 0 ) params.emplace_back(k);
 		else {
 			constants[params.size()] = lastToken;
 			params.push_back( -1 );
@@ -23,11 +25,14 @@ void ConcurrencyGround::parse( Filereader & f, TokenStruct< std::string > & ts, 
 	f.assert_token( ")" );
 }
 
-void ConcurrencyGround::setLifted( pddl::Lifted * l, pddl::Domain & d ) {
+void ConcurrencyGround::setLifted(const std::shared_ptr<pddl::Lifted>& l, pddl::Domain & d )
+{
 	lifted = l;
-	for ( auto it = constants.begin(); it != constants.end(); ++it ) {
-		std::pair< bool, int > p = d.types[lifted->params[it->first]]->parseConstant( it->second );
-		if ( p.first ) params[it->first] = p.second;
+	auto lock = lifted.lock();
+	for (auto& constant : constants)
+	{
+		std::pair< bool, int > p = d.types[lock->params[constant.first]]->parseConstant(constant.second );
+		if ( p.first ) params[constant.first] = p.second;
 		else {
 			std::cout << "error" << std::endl;
 		}

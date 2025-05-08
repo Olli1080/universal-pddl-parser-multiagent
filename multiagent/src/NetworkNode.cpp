@@ -21,10 +21,11 @@ void NetworkNode::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruc
 	s << " )\n";
 
 	s << "  :ACTIONS (";
-	for ( unsigned i = 0; i < templates.size(); ++i ) {
-		s << " ( " << templates[i]->name;
-		for ( unsigned j = 0; j < templates[i]->params.size(); ++j )
-			s << " " << templates[i]->params[j];
+	for (const auto& i : templates)
+	{
+		s << " ( " << i->name;
+		for ( unsigned j = 0; j < i->params.size(); ++j )
+			s << " " << i->params[j];
 		s << " )";
 	}
 	s << " )\n";
@@ -57,14 +58,14 @@ void NetworkNode::parse( Filereader & f, TokenStruct< std::string > & ts, Domain
 		int action = d.actions.index( f.getToken( d.actions ) );
 		f.next();
 
-		ParamCond * c = new Lifted( d.actions[action]->name );
+		auto c = std::make_shared<Lifted>( d.actions[action]->name );
 		c->params.resize( params.size() );
 		for ( unsigned i = 0; i < params.size(); ++i ) {
 			std::string index = f.getToken();
 			std::istringstream( index ) >> c->params[i];
 			f.next();
 		}
-		templates.push_back( c );
+		templates.emplace_back( c );
 		f.assert_token( ")" );
 	}
 

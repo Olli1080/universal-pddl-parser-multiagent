@@ -23,7 +23,7 @@ public:
 	
 	bool multiagent, unfact, fact, net; // whether domain is multiagent and unfactored/factored/networked
 	
-	pddl::TokenStruct< NetworkNode * > nodes; // nodes of concurrency network
+	pddl::TokenStruct<std::shared_ptr<NetworkNode>> nodes; // nodes of concurrency network
 	PairVec edges;                            // edges of concurrency network
 
 	UnsignedVec mf;                     // merge-find for connected components
@@ -37,10 +37,7 @@ public:
 		parse(s);
 	}
 
-	~MultiagentDomain() {
-		for ( unsigned i = 0; i < nodes.size(); ++i )
-			delete nodes[i];
-	}
+	~MultiagentDomain() override = default;
 	
 	bool parseBlock(const std::string& t, Filereader& f) override {
 		if (Base::parseBlock(t, f)) return true;
@@ -72,15 +69,15 @@ public:
 		}
 
 		f.next();
-		pddl::Action * a = 0;
+		std::shared_ptr<pddl::Action> a;
 
 		// If domain is multiagent, parse using AgentAction
-		if ( multiagent ) a = new AgentAction( f.getToken() );
-		else a = new pddl::Action( f.getToken() );
+		if ( multiagent ) a = std::make_shared<AgentAction>( f.getToken() );
+		else a = std::make_shared<pddl::Action>( f.getToken() );
 
 		a->parse( f, types[0]->constants, *this );
 
-		if ( DOMAIN_DEBUG ) std::cout << a << "\n";
+		if constexpr ( DOMAIN_DEBUG ) std::cout << a << "\n";
 		actions.insert( a );
 	}
 	
@@ -91,10 +88,10 @@ public:
 		}
 
 		f.next();
-		NetworkNode * n = new NetworkNode( f.getToken() );
+		auto n = std::make_shared<NetworkNode>( f.getToken() );
 		n->parse( f, types[0]->constants, *this );
 
-		if ( DOMAIN_DEBUG ) std::cout << n << "\n";
+		if constexpr ( DOMAIN_DEBUG ) std::cout << n << "\n";
 
 		nodes.insert( n );
 		mf.push_back( mf.size() );
@@ -105,7 +102,7 @@ public:
 		int n1 = nodes.index( f.getToken( nodes ) );
 		f.next();
 		int n2 = nodes.index( f.getToken( nodes ) );
-		edges.push_back( std::make_pair( n1, n2 ) );
+		edges.emplace_back( n1, n2);
 
 		unsigned a = uf( mf, n1 ), b = uf( mf, n2 );
 		if ( a != b ) mf[MIN( a, b )] = MAX( a, b );
@@ -138,10 +135,11 @@ public:
 		for ( unsigned i = 0; i < nodes.size(); ++i )
 			nodes[i]->PDDLPrint( os, 0, pddl::TokenStruct< std::string >(), *this );
 
-		for ( unsigned i = 0; i < edges.size(); ++i ) {
+		for (auto edge : edges)
+		{
 			os << "( :POSITIVE-DEPENDENCE ";
-			os << nodes[edges[i].first]->name << " ";
-			os << nodes[edges[i].second]->name << " )\n";
+			os << nodes[edge.first]->name << " ";
+			os << nodes[edge.second]->name << " )\n";
 		}
 
 		return os;

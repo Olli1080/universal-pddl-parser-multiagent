@@ -17,9 +17,9 @@ public:
 
 	bool multiagent, unfact, fact;	// whether domain is multiagent, unfactored or factored
 
-	TokenStruct< ConcurrencyPredicate * > cpreds;	// concurrency predicates
+	TokenStruct<std::shared_ptr<ConcurrencyPredicate>> cpreds;	// concurrency predicates
 
-	std::set< ConcurrencyGround * > pendingConcurrencyGrounds;
+	std::set<std::shared_ptr<ConcurrencyGround>> pendingConcurrencyGrounds;
 
 	ConcurrencyDomain()
 		: Base(), multiagent( false ), unfact( false ), fact( false ) {}
@@ -30,10 +30,9 @@ public:
 		parse(s);
 	}
 
-	virtual ~ConcurrencyDomain() {
+	virtual ~ConcurrencyDomain() override = default;
 		// cpreds are also contained in preds, so do not delete them
 		// (they'll be deleted in the base class)
-	}
 
 	bool parseBlock(const std::string& t, Filereader& f) override {
 		if (Base::parseBlock(t, f)) return true;
@@ -60,33 +59,35 @@ public:
 		}
 
 		f.next();
-		pddl::Action * a = 0;
+		std::shared_ptr<pddl::Action> a;
 
 		// If domain is multiagent, parse using AgentAction
-		if ( multiagent ) a = new ConcurrentAction( f.getToken() );
-		else a = new pddl::Action( f.getToken() );
+		if ( multiagent ) a = std::make_shared<ConcurrentAction>( f.getToken() );
+		else a = std::make_shared<pddl::Action>( f.getToken() );
 
 		a->parse( f, types[0]->constants, *this );
 
-		if ( DOMAIN_DEBUG ) std::cout << a << "\n";
+		if constexpr ( DOMAIN_DEBUG ) std::cout << a << "\n";
 		actions.insert( a );
 
 		// create a predicate that corresponds to the action being parsed and add it
 		// to the domain
-		addConcurrencyPredicateFromAction( a );
+		addConcurrencyPredicateFromAction(*a);
 	}
 
-	void addConcurrencyPredicateFromAction( pddl::Action * a ) {
-		ConcurrencyPredicate * cp = new ConcurrencyPredicate( a->name );
-		cp->params = IntVec( a->params );
+	void addConcurrencyPredicateFromAction(const pddl::Action& a )
+	{
+		auto cp = std::make_shared<ConcurrencyPredicate>( a.name );
+		cp->params = IntVec( a.params );
 		preds.insert( cp );
 		cpreds.insert( cp );
 
 		//
-		for ( auto it = pendingConcurrencyGrounds.begin(); it != pendingConcurrencyGrounds.end(); ++it) {
-			std::string groundName = (*it)->name;
-			if ( groundName == a->name ) {
-				(*it)->setLifted( cp, *this );
+		for (const auto& pendingConcurrencyGround : pendingConcurrencyGrounds)
+		{
+			std::string groundName = pendingConcurrencyGround->name;
+			if ( groundName == a.name ) {
+				pendingConcurrencyGround->setLifted( cp, *this );
 			}
 		}
 	}
@@ -171,27 +172,28 @@ public:
 		return os;
 	}
 
-	virtual pddl::Condition * createCondition( Filereader & f ) {
+	std::shared_ptr<pddl::Condition> createCondition( Filereader & f ) override
+	{
 		std::string s = f.getToken();
 
-		if ( s == "=" ) return new pddl::Equals;
-		if ( s == "AND" ) return new pddl::And;
-		if ( s == "EXISTS" ) return new pddl::Exists;
-		if ( s == "FORALL" ) return new pddl::Forall;
-		if ( s == "INCREASE" ) return new pddl::Increase;
-		if ( s == "NOT" ) return new pddl::Not;
-		if ( s == "ONEOF" ) return new pddl::Oneof;
-		if ( s == "OR" ) return new pddl::Or;
-		if ( s == "WHEN" ) return new pddl::When;
+		if ( s == "=" ) return std::make_shared<pddl::Equals>();
+		if ( s == "AND" ) return std::make_shared<pddl::And>();
+		if ( s == "EXISTS" ) return std::make_shared<pddl::Exists>();
+		if ( s == "FORALL" ) return std::make_shared<pddl::Forall>();
+		if ( s == "INCREASE" ) return std::make_shared<pddl::Increase>();
+		if ( s == "NOT" ) return std::make_shared<pddl::Not>();
+		if ( s == "ONEOF" ) return std::make_shared<pddl::Oneof>();
+		if ( s == "OR" ) return std::make_shared<pddl::Or>();
+		if ( s == "WHEN" ) return std::make_shared<pddl::When>();
 
 		int i = preds.index( s );
 		if ( i >= 0 ) {
-			return new pddl::Ground( preds[i] );
+			return std::make_shared<pddl::Ground>( preds[i] );
 		}
 		else {
 			// they are saved to be assigned later a Lifted predicate
 			// each time an action is parsed
-			ConcurrencyGround * cg = new ConcurrencyGround( s );
+			auto cg = std::make_shared<ConcurrencyGround>(s);
 			pendingConcurrencyGrounds.insert( cg );
 			return cg;
 		}
