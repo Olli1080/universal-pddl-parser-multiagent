@@ -5,10 +5,11 @@
 
 namespace parser { namespace multiagent {
 
-void AgentAction::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const pddl::Domain & d ) const {
+void AgentAction::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const pddl::Domain & d ) const
+{
 	s << "( :ACTION " << name << "\n";
 
-	TokenStruct< std::string > astruct;
+	TokenStruct<std::string> astruct;
 
 	std::stringstream ss;
 	ss << "?" << d.types[params[0]]->name;
@@ -35,8 +36,9 @@ void AgentAction::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruc
 	s << ")\n";
 }
 
-void AgentAction::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d ) {
-	TokenStruct< std::string > astruct;
+void AgentAction::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d )
+{
+	TokenStruct<std::string> astruct;
 
 	f.next();
 	f.assert_token( ":AGENT" );

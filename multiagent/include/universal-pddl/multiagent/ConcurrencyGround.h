@@ -17,7 +17,7 @@ public:
 	ConcurrencyGround()
 		: Ground() {}
 
-	ConcurrencyGround( const std::string s, const IntVec & p = IntVec() )
+	ConcurrencyGround( const std::string& s, const IntVec & p = IntVec() )
 		: Ground( s, p ) {}
 
 	ConcurrencyGround(const std::shared_ptr<pddl::Lifted>& l, const IntVec & p = IntVec() )

@@ -7,3 +7,7 @@ project(universal-pddl-parser-multiagent
 
 add_subdirectory(universal-pddl-parser)
 add_subdirectory(multiagent)
+add_subdirectory(examples)
+
+enable_testing()
+add_subdirectory(tests)

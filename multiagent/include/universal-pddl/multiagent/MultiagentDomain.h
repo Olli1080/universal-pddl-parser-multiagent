@@ -9,7 +9,8 @@
 namespace parser { namespace multiagent {
 
 // union-find: return the root in the tree that n belongs to
-inline unsigned uf( UnsignedVec & mf, unsigned n ) {
+inline unsigned uf(UnsignedVec& mf, unsigned n)
+{
 	if ( mf[n] == n ) return n;
 	else return mf[n] = uf( mf, mf[n] );
 }
@@ -17,7 +18,8 @@ inline unsigned uf( UnsignedVec & mf, unsigned n ) {
 using pddl::Filereader;
 
 
-class MultiagentDomain : public pddl::Domain {
+class MultiagentDomain : public pddl::Domain
+{
 public:
 	using Base = pddl::Domain;
 	
@@ -28,28 +30,30 @@ public:
 
 	UnsignedVec mf;                     // merge-find for connected components
 
-	MultiagentDomain() : Base() {}
+	MultiagentDomain() = default;
 
-	MultiagentDomain( const std::string& s ) :
+	MultiagentDomain(const std::string& s) :
 		Base(),
-		multiagent( false ), unfact( false ), fact( false ), net( false )
+		multiagent(false), unfact(false), fact(false), net(false)
 	{
 		parse(s);
 	}
 
 	~MultiagentDomain() override = default;
 	
-	bool parseBlock(const std::string& t, Filereader& f) override {
+	bool parseBlock(const std::string& t, Filereader& f) override
+	{
 		if (Base::parseBlock(t, f)) return true;
 		
-		if ( t == "CONCURRENCY-CONSTRAINT" ) parseNetworkNode( f );
-		else if ( t == "POSITIVE-DEPENDENCE" ) parseNetworkEdge( f );
+		if (t == "CONCURRENCY-CONSTRAINT") parseNetworkNode(f);
+		else if (t == "POSITIVE-DEPENDENCE") parseNetworkEdge(f);
 		else return false; // Unknown block type
 		
 		return true;
 	}
 	
-	bool parseRequirement( const std::string& s ) override {
+	bool parseRequirement(const std::string& s) override
+	{
 		if (Base::parseRequirement(s)) return true;
 		
 		// Parse possible requirements of a multi-agent domain
@@ -62,8 +66,10 @@ public:
 		return true;
 	}
 	
-	void parseAction( Filereader & f ) override {
-		if ( !preds.size() ) {
+	void parseAction(Filereader& f) override
+	{
+		if (preds.empty()) 
+		{
 			std::cout << "Predicates needed before defining actions\n";
 			exit(1);
 		}
@@ -81,8 +87,10 @@ public:
 		actions.insert( a );
 	}
 	
-	void parseNetworkNode( Filereader & f ) {
-		if ( !preds.size() || !actions.size() ) {
+	void parseNetworkNode(Filereader& f)
+	{
+		if (preds.empty() || actions.empty()) 
+		{
 			std::cout << "Predicates and actions needed before defining a concurrency network\n";
 			exit(1);
 		}
@@ -94,10 +102,11 @@ public:
 		if constexpr ( DOMAIN_DEBUG ) std::cout << n << "\n";
 
 		nodes.insert( n );
-		mf.push_back( mf.size() );
+		mf.emplace_back(mf.size());
 	}
 
-	void parseNetworkEdge( Filereader & f ) {
+	void parseNetworkEdge(Filereader& f)
+	{
 		f.next();
 		int n1 = nodes.index( f.getToken( nodes ) );
 		f.next();
@@ -105,14 +114,15 @@ public:
 		edges.emplace_back( n1, n2);
 
 		unsigned a = uf( mf, n1 ), b = uf( mf, n2 );
-		if ( a != b ) mf[MIN( a, b )] = MAX( a, b );
+		if ( a != b ) mf[std::min( a, b )] = std::max( a, b );
 
 		f.next();
 		f.assert_token( ")" );
 	}
 
 	
-	std::ostream& print_requirements(std::ostream& os) const override {
+	std::ostream& print_requirements(std::ostream& os) const override
+	{
 		os << "( :REQUIREMENTS";
 		if ( equality ) os << " :EQUALITY";
 		if ( strips ) os << " :STRIPS";
@@ -131,9 +141,10 @@ public:
 		return os;
 	}
 	
-	std::ostream& print_addtional_blocks(std::ostream& os) const override {
-		for ( unsigned i = 0; i < nodes.size(); ++i )
-			nodes[i]->PDDLPrint( os, 0, pddl::TokenStruct< std::string >(), *this );
+	std::ostream& print_addtional_blocks(std::ostream& os) const override
+	{
+		for (const auto& node : nodes)
+			node->PDDLPrint(os, 0, pddl::TokenStruct<std::string>(), *this);
 
 		for (auto edge : edges)
 		{

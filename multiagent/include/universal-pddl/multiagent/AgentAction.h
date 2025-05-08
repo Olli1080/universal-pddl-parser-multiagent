@@ -14,7 +14,8 @@ public:
 
 	AgentAction( const std::string & s ) : Action( s ) {}
 
-	void print( std::ostream & s ) const {
+	void print( std::ostream & s ) const override
+	{
 		s << name << params << "\n";
 		s << "Agent: " << params[0] << "\n";
 		s << "Pre: " << pre;
@@ -25,7 +26,7 @@ public:
 
 	void PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const pddl::Domain & d ) const override;
 
-	void parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d );
+	void parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d ) override;
 };
 
 } } // namespaces

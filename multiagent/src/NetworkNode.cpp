@@ -6,7 +6,8 @@ namespace parser { namespace multiagent {
 
 using pddl::Lifted;
 
-void NetworkNode::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const Domain & d ) const {
+void NetworkNode::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const Domain & d ) const
+{
 	s << "( :CONCURRENCY-CONSTRAINT " << name << "\n";
 
 	s << "  :PARAMETERS ";
@@ -24,15 +25,16 @@ void NetworkNode::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruc
 	for (const auto& i : templates)
 	{
 		s << " ( " << i->name;
-		for ( unsigned j = 0; j < i->params.size(); ++j )
-			s << " " << i->params[j];
+		for (int param : i->params)
+			s << " " << param;
 		s << " )";
 	}
 	s << " )\n";
 	s << ")\n";
 }
 
-void NetworkNode::parse( Filereader & f, TokenStruct< std::string > & ts, Domain & d ) {
+void NetworkNode::parse( Filereader & f, TokenStruct< std::string > & ts, Domain & d )
+{
 	f.next();
 	f.assert_token( ":PARAMETERS" );
 	f.assert_token( "(" );
@@ -53,7 +55,8 @@ void NetworkNode::parse( Filereader & f, TokenStruct< std::string > & ts, Domain
 
 	f.assert_token( ":ACTIONS" );
 	f.assert_token( "(" );
-	while ( f.getChar() != ')' ) {
+	while ( f.getChar() != ')' ) 
+	{
 		f.assert_token( "(" );
 		int action = d.actions.index( f.getToken( d.actions ) );
 		f.next();

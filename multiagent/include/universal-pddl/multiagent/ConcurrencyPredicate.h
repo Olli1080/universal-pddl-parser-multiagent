@@ -12,7 +12,7 @@ class ConcurrencyPredicate : public pddl::Lifted
 {
 public:
 
-	ConcurrencyPredicate() {}
+	ConcurrencyPredicate() = default;
 
 	ConcurrencyPredicate( const std::string & s )
 		: pddl::Lifted( s ) {}
@@ -26,7 +26,7 @@ public:
 	void parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d );
 	*/
 
-	std::shared_ptr<Condition> copy(pddl::Domain& d) override
+	[[nodiscard]] std::shared_ptr<Condition> copy(const pddl::Domain& d) const override
 	{
 		return std::make_shared<ConcurrencyPredicate>(*this);
 	}

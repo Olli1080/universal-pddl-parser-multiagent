@@ -7,7 +7,8 @@
 
 namespace parser { namespace multiagent {
 
-void ConcurrentAction::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const pddl::Domain & d ) const {
+void ConcurrentAction::PDDLPrint( std::ostream & s, unsigned indent, const TokenStruct< std::string > & ts, const pddl::Domain & d ) const
+{
 	s << "( :ACTION " << name << "\n";
 
 	TokenStruct< std::string > astruct;
@@ -37,7 +38,8 @@ void ConcurrentAction::PDDLPrint( std::ostream & s, unsigned indent, const Token
 	s << ")\n";
 }
 
-void ConcurrentAction::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d ) {
+void ConcurrentAction::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::Domain & d )
+{
 	TokenStruct< std::string > astruct;
 
 	f.next();
@@ -46,9 +48,9 @@ void ConcurrentAction::parse( Filereader & f, TokenStruct< std::string > & ts, p
 	if ( d.typed ) {
 		f.next();
 		f.assert_token( "-" );
-		astruct.types.push_back( f.getToken( d.types ) );
+		astruct.types.emplace_back( f.getToken( d.types ) );
 	}
-	else astruct.types.push_back( "OBJECT" );
+	else astruct.types.emplace_back("OBJECT" );
 
 	f.next();
 	f.assert_token( ":PARAMETERS" );

@@ -11,7 +11,8 @@ namespace parser { namespace multiagent {
 
 using pddl::Filereader;
 
-class ConcurrencyDomain : public pddl::Domain {
+class ConcurrencyDomain : public pddl::Domain
+{
 public:
 	using Base = pddl::Domain;
 
@@ -34,13 +35,15 @@ public:
 		// cpreds are also contained in preds, so do not delete them
 		// (they'll be deleted in the base class)
 
-	bool parseBlock(const std::string& t, Filereader& f) override {
+	bool parseBlock(const std::string& t, Filereader& f) override
+	{
 		if (Base::parseBlock(t, f)) return true;
 
 		return false;
 	}
 
-	bool parseRequirement( const std::string& s ) override {
+	bool parseRequirement( const std::string& s ) override
+	{
 		if (Base::parseRequirement(s)) return true;
 
 		// Parse possible requirements of a multi-agent domain
@@ -52,8 +55,10 @@ public:
 		return true;
 	}
 
-	void parseAction( Filereader & f ) override {
-		if ( !preds.size() ) {
+	void parseAction( Filereader & f ) override
+	{
+		if (preds.empty()) 
+		{
 			std::cout << "Predicates needed before defining actions\n";
 			exit(1);
 		}
@@ -92,7 +97,8 @@ public:
 		}
 	}
 
-	std::ostream& print_requirements(std::ostream& os) const override {
+	std::ostream& print_requirements(std::ostream& os) const override
+	{
 		os << "( :REQUIREMENTS";
 		if ( equality ) os << " :EQUALITY";
 		if ( strips ) os << " :STRIPS";
@@ -110,47 +116,55 @@ public:
 		return os;
 	}
 
-	virtual std::ostream& print(std::ostream& os) const override {
+	std::ostream& print(std::ostream& os) const override
+	{
 		os << "( DEFINE ( DOMAIN " << name << " )\n";
 		print_requirements(os);
 
-		if ( typed ) {
+		if ( typed ) 
+		{
 			os << "( :TYPES\n";
 			for ( unsigned i = 1; i < types.size(); ++i )
 				types[i]->PDDLPrint( os );
 			os << ")\n";
 		}
 
-		if ( cons ) {
+		if ( cons ) 
+		{
 			os << "( :CONSTANTS\n";
-			for ( unsigned i = 0; i < types.size(); ++i )
-				if ( types[i]->constants.size() ) {
+			for (const auto& type : types)
+			{
+				if (!type->constants.empty())
+				{
 					os << "\t";
-					for ( unsigned j = 0; j < types[i]->constants.size(); ++j )
-						os << types[i]->constants[j] << " ";
-					if ( typed )
-						os << "- " << types[i]->name;
+					for (const auto& constant : type->constants)
+						os << constant << " ";
+					if (typed)
+						os << "- " << type->name;
 					os << "\n";
 				}
+			}
 			os << ")\n";
 		}
 
 		printPredicates( os );
 
-		if ( funcs.size() ) {
+		if (!funcs.empty()) 
+		{
 			os << "( :FUNCTIONS\n";
-			for ( unsigned i = 0; i < funcs.size(); ++i ) {
-				funcs[i]->PDDLPrint( os, 1, TokenStruct< std::string >(), *this );
+			for (const auto& func : funcs)
+			{
+				func->PDDLPrint(os, 1, TokenStruct<std::string>(), *this);
 				os << "\n";
 			}
 			os << ")\n";
 		}
 
-		for ( unsigned i = 0; i < actions.size(); ++i )
-			actions[i]->PDDLPrint( os, 0, TokenStruct< std::string >(), *this );
+		for (const auto& action : actions)
+			action->PDDLPrint(os, 0, TokenStruct<std::string>(), *this);
 
-		for ( unsigned i = 0; i < derived.size(); ++i )
-			derived[i]->PDDLPrint( os, 0, TokenStruct< std::string >(), *this );
+		for (const auto& i : derived)
+			i->PDDLPrint(os, 0, TokenStruct<std::string>(), *this);
 
 		print_addtional_blocks(os);
 
@@ -159,11 +173,14 @@ public:
 		return os;
 	}
 
-	std::ostream& printPredicates( std::ostream& os ) const {
+	std::ostream& printPredicates( std::ostream& os ) const
+	{
 		os << "( :PREDICATES\n";
-		for ( unsigned i = 0; i < preds.size(); ++i ) {
-			if ( cpreds.index( preds[i]->name ) == -1 ){
-				preds[i]->PDDLPrint( os, 1, TokenStruct< std::string >(), *this );
+		for (const auto& pred : preds)
+		{
+			if ( cpreds.index(pred->name ) == -1 )
+			{
+				pred->PDDLPrint(os, 1, TokenStruct<std::string>(), *this);
 				os << "\n";
 			}
 		}
@@ -187,10 +204,12 @@ public:
 		if ( s == "WHEN" ) return std::make_shared<pddl::When>();
 
 		int i = preds.index( s );
-		if ( i >= 0 ) {
+		if ( i >= 0 ) 
+		{
 			return std::make_shared<pddl::Ground>( preds[i] );
 		}
-		else {
+		else 
+		{
 			// they are saved to be assigned later a Lifted predicate
 			// each time an action is parsed
 			auto cg = std::make_shared<ConcurrencyGround>(s);
@@ -200,7 +219,7 @@ public:
 
 		f.tokenExit( s );
 
-		return 0;
+		return nullptr;
 	}
 };
 

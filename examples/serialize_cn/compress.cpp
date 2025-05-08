@@ -47,7 +47,7 @@ int main( int argc, char * argv[] ) {
 			h.clear();
 		}
 		h.insert( a );
-		n = MAX( n, a );
+		n = std::max(n, a);
 
 		std::ostringstream os;
 		os << "(" << s << " a" << a;
