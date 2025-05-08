@@ -1,3 +1,4 @@
 [submodule "universal-pddl-parser"]
 	path = universal-pddl-parser
 	url = https://github.com/Olli1080/universal-pddl-parser
+	branch = rework-pointers

@@ -8,3 +8,4 @@ ins.txt
 *.o
 *.pyc
 domains/maze/problems/generator/generate
+install

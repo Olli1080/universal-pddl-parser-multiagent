@@ -46,7 +46,7 @@ void AgentAction::parse( Filereader & f, TokenStruct< std::string > & ts, pddl::
 		f.assert_token( "-" );
 		astruct.types.push_back( f.getToken( d.types ) );
 	}
-	else astruct.types.push_back( "OBJECT" );
+	else astruct.types.emplace_back("OBJECT" );
 
 	f.next();
 	f.assert_token( ":PARAMETERS" );
